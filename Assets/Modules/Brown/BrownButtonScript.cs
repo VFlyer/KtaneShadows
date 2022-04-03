@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using BrownButton;
 using UnityEngine;
 using Rnd = UnityEngine.Random;
@@ -34,7 +35,7 @@ public class BrownButtonScript : MonoBehaviour
     private Ax _correctAxis;
     private Quaternion _trueRotation = Quaternion.identity;
 
-    private const int REPEATSCOUNT = 1;
+    private const int REPEATSCOUNT = 0;
 
     private void Start()
     {
@@ -155,9 +156,9 @@ public class BrownButtonScript : MonoBehaviour
         Debug.LogFormat("[Brown's Shadow #{0}] The correct cell to submit is {1}.", _moduleId, _chosenNet.First(c => _absoluteAxes[c] == _correctAxis));
 
         _currentPosition = _chosenNet.PickRandom();
-        _currentRotation = new Vector3Int(0, 0, 0);
         Vector3 end = new Vector3(_currentPosition.x, _currentPosition.y, _currentPosition.z) * -0.1f - _currentRotation * 0.1f;
         WallsParent.localPosition = end;
+        _currentRotation = Vector3Int.down;
 
         GetComponentInChildren<CameraScript>().UpdateChildren();
         Module.OnActivate += delegate
@@ -236,14 +237,12 @@ public class BrownButtonScript : MonoBehaviour
 
         Quaternion start = Camera.transform.localRotation;
         float startTime = Time.time;
-        float progress = 0f;
         while(startTime + DELAY_A > Time.time)
         {
             yield return null;
             if(presses != _cameraPresses)
                 yield break;
-            progress += Time.deltaTime;
-            Camera.transform.localRotation = Quaternion.Lerp(start, _trueRotation, progress / DELAY_A);
+            Camera.transform.localRotation = Quaternion.Slerp(start, _trueRotation, (Time.time - startTime) / DELAY_A);
         }
         Camera.transform.localRotation = _trueRotation;
     }
@@ -253,12 +252,10 @@ public class BrownButtonScript : MonoBehaviour
         Vector3 start = WallsParent.localPosition;
         Vector3 end = new Vector3(_currentPosition.x, _currentPosition.y, _currentPosition.z) * -0.1f - _currentRotation * 0.1f;
         float startTime = Time.time;
-        float progress = 0f;
         while(startTime + DELAY_A > Time.time)
         {
             yield return null;
-            progress += Time.deltaTime;
-            WallsParent.localPosition = Vector3.Lerp(start, end, progress / DELAY_A);
+            WallsParent.localPosition = Vector3.Lerp(start, end, (Time.time - startTime) / DELAY_A);
         }
         WallsParent.localPosition = end;
     }
@@ -352,5 +349,42 @@ public class BrownButtonScript : MonoBehaviour
             elapsed += Time.deltaTime;
         }
         BrownButtonCap.transform.localPosition = new Vector3(0f, b, 0f);
+    }
+
+#pragma warning disable 414
+    private string TwitchHelpMessage = @"Use ""!{0} F"" to press the brown button. Use ""!{0} QWEASD"" to press every other button.";
+#pragma warning restore 414
+
+    private IEnumerator ProcessTwitchCommand(string command)
+    {
+        command = Regex.Replace(command.ToLowerInvariant(), @"\s+", "");
+        if(command.Length == 0 || command.Any(c => !"fqweasd".Contains(c)))
+            yield break;
+        yield return null;
+        foreach(char c in command)
+        {
+            if(c == 'f')
+                BrownButtonSelectable.OnInteract();
+            else if(c == 'q')
+                OtherButtons[0].OnInteract();
+            else if(c == 'w')
+                OtherButtons[5].OnInteract();
+            else if(c == 'e')
+                OtherButtons[2].OnInteract();
+            else if(c == 'a')
+                OtherButtons[1].OnInteract();
+            else if(c == 's')
+                OtherButtons[3].OnInteract();
+            else if(c == 'd')
+                OtherButtons[4].OnInteract();
+
+            yield return new WaitForSeconds(0.1f);
+
+            if(c == 'f')
+            {
+                BrownButtonSelectable.OnInteractEnded();
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
     }
 }
