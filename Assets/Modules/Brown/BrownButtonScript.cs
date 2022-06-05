@@ -113,9 +113,9 @@ public class BrownButtonScript : MonoBehaviour
         List<Ax> markedAxes = new List<Ax>();
 
         List<Ax[]> alltests = new List<Ax[]> {
-            new Ax[] { Ax.Up, Ax.Down },
+            new Ax[] { Ax.Down, Ax.Up },
             new Ax[] { Ax.Left, Ax.Right },
-            new Ax[] { Ax.Front, Ax.Back },
+            new Ax[] { Ax.Back, Ax.Front },
             new Ax[] { Ax.Zig, Ax.Zag }
         };
 
