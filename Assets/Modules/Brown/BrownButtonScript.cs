@@ -134,18 +134,14 @@ public class BrownButtonScript : MonoBehaviour
 
             AddWall(marked, markedWall, ansAx == i ? Materials[0] : Materials[ixes[i] + (int)_absoluteAxes[marked]]);
             if(ansAx != i)
-            {
                 Debug.LogFormat("[Brown's Shadow #{0}] Cube {1} is displaying {2}.", _moduleId, marked, Materials[ixes[i] + (int)_absoluteAxes[marked]].name.Substring(7));
-            }
 
             foreach(Vector3Int change in changes.Where(c => !_chosenNet.Contains(marked + c) && c != markedWall))
                 AddWall(marked, change, Materials[0]);
 
             foreach(Vector3Int pos in nodes.Where(n => n != marked))
-            {
                 foreach(Vector3Int change in changes.Where(c => !_chosenNet.Contains(pos + c)))
                     AddWall(pos, change, Materials[0]);
-            }
         }
 
         if(alltests.Select(a => a[0]).Count(a => markedAxes.Contains(a)) >= 2)
@@ -156,7 +152,7 @@ public class BrownButtonScript : MonoBehaviour
         Debug.LogFormat("[Brown's Shadow #{0}] The correct cell to submit is {1}.", _moduleId, _chosenNet.First(c => _absoluteAxes[c] == _correctAxis));
 
         _currentPosition = _chosenNet.PickRandom();
-        Vector3 end = new Vector3(_currentPosition.x, _currentPosition.y, _currentPosition.z) * -0.1f - _currentRotation * 0.1f;
+        Vector3 end = new Vector3(-_currentPosition.x, _currentPosition.y, _currentPosition.z) * -0.1f - _currentRotation * 0.1f;
         WallsParent.localPosition = end;
         _currentRotation = Vector3Int.down;
 
@@ -250,7 +246,7 @@ public class BrownButtonScript : MonoBehaviour
     private IEnumerator MoveMaze()
     {
         Vector3 start = WallsParent.localPosition;
-        Vector3 end = new Vector3(_currentPosition.x, _currentPosition.y, _currentPosition.z) * -0.1f - _currentRotation * 0.1f;
+        Vector3 end = new Vector3(-_currentPosition.x, _currentPosition.y, _currentPosition.z) * -0.1f - _currentRotation * 0.1f;
         float startTime = Time.time;
         while(startTime + DELAY_A > Time.time)
         {
@@ -263,8 +259,8 @@ public class BrownButtonScript : MonoBehaviour
     private void AddWall(Vector3Int position, Vector3Int direction, Material m)
     {
         GameObject go = Instantiate(WallTemplate, WallsParent);
-        go.transform.localPosition = position;
-        Vector3 rot = DirectionToEuler(direction);
+        go.transform.localPosition = new Vector3Int(-position.x, position.y, position.z);
+        Vector3 rot = DirectionToEuler(new Vector3Int(-direction.x, direction.y, direction.z));
         go.transform.localEulerAngles = rot;
         go.transform.localScale = new Vector3(1f, 1f, 1f);
         go.GetComponentInChildren<CustomMaterialInfo>().Color = m;
@@ -294,12 +290,12 @@ public class BrownButtonScript : MonoBehaviour
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.BigButtonPress, transform);
         if(_moduleActivated && !_moduleSolved)
         {
-            if(_chosenNet.Any(t => t == _currentPosition + _currentRotation))
+            if(_chosenNet.Any(t => t == _currentPosition + new Vector3Int((int)-_currentRotation.x, (int)_currentRotation.y, (int)_currentRotation.z)))
             {
                 if(_moveRoutine != null)
                     StopCoroutine(_moveRoutine);
                 _moveRoutine = StartCoroutine(MoveMaze());
-                _currentPosition += new Vector3Int((int)_currentRotation.x, (int)_currentRotation.y, (int)_currentRotation.z);
+                _currentPosition += new Vector3Int((int)-_currentRotation.x, (int)_currentRotation.y, (int)_currentRotation.z);
             }
             else
             {
