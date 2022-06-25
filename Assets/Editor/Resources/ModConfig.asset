@@ -19,7 +19,9 @@ MonoBehaviour:
 
     Currently contains:
 
-    * Brown''s Shadow'
-  version: 1.3
+    * Brown''s Shadow
+
+    * Squad''s Shadow'
+  version: 2.0
   outputFolder: build
   previewImage: {fileID: 2800000, guid: a69b178b4db2d1c42b60e08c7c347063, type: 3}
