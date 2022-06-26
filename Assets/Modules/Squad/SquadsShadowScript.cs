@@ -22,10 +22,13 @@ public class SquadsShadowScript : MonoBehaviour
     private static readonly Harmony _harm = new Harmony("KTANE-Mod-Squad's-Shadow");
     private static bool _hasHarmed, _passThrough;
     private static readonly Dictionary<object, object> _allLinks = new Dictionary<object, object>();
+    private static readonly Dictionary<object, object> _SLToMod = new Dictionary<object, object>();
     private static MethodInfo _SLPASS;
+    private static Type _bcType;
+    private static MethodInfo _getDisplayName;
 
     private int _chains;
-    private bool _isSolved;
+    private bool _isSolved, _first;
     private int _submission;
     private float _lastPress;
     private bool _running;
@@ -38,6 +41,10 @@ public class SquadsShadowScript : MonoBehaviour
 #if UNITY_EDITOR
         Log("Looks like you're in the editor. This module won't work here.");
         _sn = "";
+        GetComponent<KMBombModule>().OnActivate += Activate;
+        _submission = 69;
+        _chains = 47;
+        Press(-1);
         return;
 #endif
         _sn = GetComponent<KMBombInfo>().GetSerialNumber();
@@ -51,6 +58,9 @@ public class SquadsShadowScript : MonoBehaviour
             Press(-1);
             return;
         }
+
+        _first = true;
+
         HookHarmony();
         Warn(false);
         GetComponent<KMBombModule>().OnActivate += Activate;
@@ -61,7 +71,9 @@ public class SquadsShadowScript : MonoBehaviour
         Type needyType = ReflectionHelper.FindTypeInGame("NeedyComponent");
         Type widgetType = ReflectionHelper.FindTypeInGame("WidgetComponent");
         Type timerType = ReflectionHelper.FindTypeInGame("TimerComponent");
-        foreach(MonoBehaviour o in transform.root.gameObject.GetComponentsInChildren(ReflectionHelper.FindTypeInGame("BombComponent")).Cast<MonoBehaviour>())
+        _bcType = ReflectionHelper.FindTypeInGame("BombComponent");
+        _getDisplayName = _bcType.Method("GetModuleDisplayName");
+        foreach(MonoBehaviour o in transform.root.gameObject.GetComponentsInChildren(_bcType).Cast<MonoBehaviour>())
         {
             KMBombModule m;
             if(m = o.GetComponent<KMBombModule>())
@@ -91,7 +103,15 @@ public class SquadsShadowScript : MonoBehaviour
         HookUnwarn(allModules);
 
         Type slType = ReflectionHelper.FindTypeInGame("StatusLight");
-        List<Component> allSLs = allModules.Select(m => m.Obj.GetComponentInChildren(slType)).ToList();
+        List<Component> allSLs = new List<Component>();
+
+        foreach(Module m in allModules)
+        {
+            Component sl = m.Obj.GetComponentInChildren(slType);
+            allSLs.Add(sl);
+            if(sl && !_SLToMod.ContainsKey(sl))
+                _SLToMod.Add(sl, m.Obj);
+        }
 
         n = allSLs.Count(m => m == null);
         if(n != 0)
@@ -160,6 +180,62 @@ public class SquadsShadowScript : MonoBehaviour
             int j = i;
             _buttons[i].OnInteract += () => { Press(j); return false; };
         }
+        if(TwitchPlaysActive)
+        {
+            _twitchMode = true;
+            GameObject tpAPIGameObject = GameObject.Find("TwitchPlays_Info");
+            if(tpAPIGameObject != null)
+                _tpAPI = tpAPIGameObject.GetComponent<IDictionary<string, object>>();
+            else
+                _twitchMode = false;
+        }
+        else
+            _twitchMode = false;
+
+        if(_first && GetComponent<KMBombInfo>().GetSolvableModuleNames().Contains("Mystery Module"))
+            Mystery();
+    }
+
+    private void Mystery()
+    {
+        Type mmt;
+        Component[] mms = transform.root.GetComponentsInChildren(mmt = ReflectionHelper.FindType("MysteryModuleScript"));
+        foreach(Component mm in mms)
+            StartCoroutine(MysteryHook(mm, mmt));
+    }
+
+    private IEnumerator MysteryHook(Component mm, Type mmt)
+    {
+        FieldInfo fs = mmt.GetField("failsolve", ReflectionHelper.Flags);
+        FieldInfo mdm = mmt.GetField("mystifiedModule", ReflectionHelper.Flags);
+        yield return new WaitUntil(() => (bool)fs.GetValue(mm) || (KMBombModule)mdm.GetValue(mm));
+        if((bool)fs.GetValue(mm))
+            yield break;
+        KMBombModule hidden = (KMBombModule)mdm.GetValue(mm);
+        if(!hidden)
+            yield break;
+
+        Log("Located a Mystery Module! The hidden module will be removed.");
+        Log("There are now {0} usable modules.", _submission - 1);
+
+        object hiddenSL = _SLToMod.First(kvp => ((Component)kvp.Value).GetComponent<KMBombModule>() == hidden).Key;
+        if(_allLinks[hiddenSL] == hiddenSL)
+        {
+            _chains--;
+            Log("The removal of the hidden module reduced the number of chains by one.");
+            Log("There are now {0} chains.", _chains);
+        }
+        _allLinks[_allLinks.First(kvp => kvp.Value == hiddenSL).Key] = _allLinks[hiddenSL];
+        _allLinks.Remove(hiddenSL);
+        _submission--;
+        foreach(SquadsShadowScript s in transform.root.GetComponentsInChildren<SquadsShadowScript>())
+        {
+            s._chains = _chains;
+            s._submission = _submission;
+            s.Press(-1);
+        }
+
+        hidden.OnPass += WarnSolve;
     }
 
     private void Press(int ix)
@@ -187,6 +263,7 @@ public class SquadsShadowScript : MonoBehaviour
                     _submission += 10;
                 break;
         }
+        _submission += 100;
         _submission %= 100;
 
         _digits[0].text = (_submission / 10).ToString();
@@ -244,13 +321,15 @@ public class SquadsShadowScript : MonoBehaviour
 
     private bool WarnSolve()
     {
-        Warn(true);
+        foreach(SquadsShadowScript s in transform.root.GetComponentsInChildren<SquadsShadowScript>())
+            s.Warn(true);
         return false;
     }
 
     private bool UnwarnSolve(object o)
     {
-        Warn(false);
+        foreach(SquadsShadowScript s in transform.root.GetComponentsInChildren<SquadsShadowScript>())
+            s.Warn(false);
         return false;
     }
 
@@ -295,6 +374,96 @@ public class SquadsShadowScript : MonoBehaviour
         _SLPASS.Invoke(_allLinks[__instance], new object[0]);
         _passThrough = false;
 
+        if(_twitchMode)
+        {
+            Component mod = _SLToMod[__instance] as Component;
+            Component mod2 = _SLToMod[_allLinks[__instance]] as Component;
+            if(mod == mod2)
+                _tpAPI["ircConnectionSendMessage"] = "Solving Module " + GetModuleCode(mod) + " turned its own status light green.";
+            else
+                _tpAPI["ircConnectionSendMessage"] = "Solving Module " + GetModuleCode(mod) + " turned the status light on Module " + GetModuleCode(mod2) + " green.";
+        }
+
         return false;
+    }
+
+    private bool TwitchPlaysActive;
+    private static bool _twitchMode;
+    private static IDictionary<string, object> _tpAPI;
+
+#pragma warning disable 414
+    private readonly string TwitchHelpMessage = @"Use ""! {0} submit 47"" to submit 47 chains.";
+#pragma warning restore 414
+    IEnumerator ProcessTwitchCommand(string command)
+    {
+        string[] parts = command.ToLowerInvariant().Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        int submitted;
+        if(parts.Length != 2 || parts[0] != "submit" || !int.TryParse(parts[1], out submitted) || submitted < 0 || submitted > 99)
+            yield break;
+
+        yield return null;
+        if(submitted == _submission)
+        {
+            _buttons[0].OnInteract();
+            yield return new WaitForSeconds(0.1f);
+            _buttons[2].OnInteract();
+            yield break;
+        }
+
+        int target1 = submitted / 10;
+        int target2 = submitted % 10;
+
+        int current1 = _submission / 10;
+        int current2 = _submission % 10;
+
+        int dir1 = current1 - target1 < 0 ? 0 : 2;
+        int dir2 = current2 - target2 < 0 ? 1 : 3;
+
+        while(_submission / 10 != target1)
+        {
+            _buttons[dir1].OnInteract();
+            yield return new WaitForSeconds(0.1f);
+        }
+        while(_submission % 10 != target2)
+        {
+            _buttons[dir2].OnInteract();
+            yield return new WaitForSeconds(0.1f);
+        }
+        yield return "strike";
+        yield return "solve";
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        Log("Module force solved.");
+        IEnumerator cmd = ProcessTwitchCommand("submit " + _chains % 100);
+        while(cmd.MoveNext())
+            yield return cmd.Current;
+        while(!_isSolved)
+            yield return true;
+    }
+
+    private static string GetModuleCode(Component o)
+    {
+        Transform closest = null;
+        float closestDistance = float.MaxValue;
+        foreach(Transform child in o.transform.parent)
+        {
+            float distance = (o.transform.position - child.position).magnitude;
+            if(child.gameObject.name == "TwitchModule(Clone)" && (closest == null || distance < closestDistance))
+            {
+                closest = child;
+                closestDistance = distance;
+            }
+        }
+
+        string name = "";
+        KMBombModule m;
+        if(m = o.GetComponent<KMBombModule>())
+            name = m.ModuleDisplayName;
+        else
+            name = (string)_getDisplayName.Invoke(o, new object[0]);
+
+        return closest != null ? closest.Find("MultiDeckerUI").Find("IDText").GetComponent<UnityEngine.UI.Text>().text + " (" + name + ")" : "ERROR";
     }
 }
