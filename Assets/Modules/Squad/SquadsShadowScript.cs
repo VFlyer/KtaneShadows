@@ -218,7 +218,7 @@ public class SquadsShadowScript : MonoBehaviour
         Log("Located a Mystery Module! The hidden module will be removed.");
         Log("There are now {0} usable modules.", _submission - 1);
 
-        object hiddenSL = _SLToMod.First(kvp => ((Component)kvp.Value).GetComponent<KMBombModule>() == hidden).Key;
+        object hiddenSL = _SLToMod.First(kvp => kvp.Value != null && ((Component)kvp.Value).GetComponent<KMBombModule>() == hidden).Key;
         if(_allLinks[hiddenSL] == hiddenSL)
         {
             _chains--;
