@@ -22,7 +22,7 @@ public class SquadsShadowScript : MonoBehaviour
     private static readonly Harmony _harm = new Harmony("KTANE-Mod-Squad's-Shadow");
     private static bool _hasHarmed, _passThrough;
     private static readonly Dictionary<object, object> _allLinks = new Dictionary<object, object>();
-    private static readonly Dictionary<object, object> _SLToMod = new Dictionary<object, object>();
+    private static Dictionary<object, object> _SLToMod = new Dictionary<object, object>();
     private static MethodInfo _SLPASS;
     private static Type _bcType;
     private static MethodInfo _getDisplayName;
@@ -218,7 +218,9 @@ public class SquadsShadowScript : MonoBehaviour
         Log("Located a Mystery Module! The hidden module will be removed.");
         Log("There are now {0} usable modules.", _submission - 1);
 
-        object hiddenSL = _SLToMod.First(kvp => kvp.Value != null && ((Component)kvp.Value).GetComponent<KMBombModule>() == hidden).Key;
+        ClearSLToMod();
+
+        object hiddenSL = _SLToMod.First(kvp => ((Component)kvp.Value).GetComponent<KMBombModule>() == hidden).Key;
         if(_allLinks[hiddenSL] == hiddenSL)
         {
             _chains--;
@@ -236,6 +238,24 @@ public class SquadsShadowScript : MonoBehaviour
         }
 
         hidden.OnPass += WarnSolve;
+    }
+
+    private void ClearSLToMod()
+    {
+        List<KeyValuePair<object, object>> sltm = _SLToMod.ToList();
+        for(int i = _SLToMod.Count-1; i >= 0; i--)
+        {
+            try
+            {
+                if(sltm[i].Key == null || sltm[i].Value == null || ((Component)sltm[i].Key).gameObject == null || ((Component)sltm[i].Value).gameObject == null)
+                    sltm.RemoveAt(i);
+            }
+            catch (NullReferenceException)
+            {
+                sltm.RemoveAt(i);
+            }
+        }
+        _SLToMod = sltm.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
 
     private void Press(int ix)
