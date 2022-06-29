@@ -412,7 +412,7 @@ public class SquadsShadowScript : MonoBehaviour
     private static IDictionary<string, object> _tpAPI;
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Use ""! {0} submit 47"" to submit 47 chains.";
+    private readonly string TwitchHelpMessage = @"Use ""!{0} submit 47"" to submit 47 chains.";
 #pragma warning restore 414
     IEnumerator ProcessTwitchCommand(string command)
     {

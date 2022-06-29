@@ -21,7 +21,9 @@ MonoBehaviour:
 
     * Brown''s Shadow
 
-    * Squad''s Shadow'
-  version: 2.4
+    * Squad''s Shadow
+
+    * Memory''s Shadow'
+  version: 3.0
   outputFolder: build
   previewImage: {fileID: 2800000, guid: a69b178b4db2d1c42b60e08c7c347063, type: 3}
