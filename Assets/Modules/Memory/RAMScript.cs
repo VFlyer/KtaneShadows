@@ -47,7 +47,9 @@ public class RAMScript : MonoBehaviour
 
         _hooks.Add(_hook = AnyPress);
 
-        _max = RNG.Range(47, 69);
+        int numMods = transform.root.GetComponentsInChildren<RAMScript>().Length;
+
+        _max = RNG.Range(47, 69) + 3 * numMods;
 
         Log("You have {0} total bytes of RAM.", _max);
 
