@@ -19,7 +19,7 @@ public class RAMScript : MonoBehaviour
     private static List<Action<string>> _hooks = new List<Action<string>>();
     private Action<string> _hook;
 
-    private static bool _harmed;
+    private static bool _harmed, _active;
 
     private int _max, _bytesInternal;
     private int _bytes
@@ -62,6 +62,9 @@ public class RAMScript : MonoBehaviour
         GetComponent<KMSelectable>().Children[1].OnInteract += Solve;
 
         StartCoroutine(DateTimeAnim());
+
+        GetComponent<KMBombModule>().OnActivate += () => _active = true;
+        GetComponent<KMBombInfo>().OnBombSolved += () => _active = false;
 
         _bytes = 0;
     }
@@ -121,7 +124,7 @@ public class RAMScript : MonoBehaviour
 
     private void AnyPress(string button)
     {
-        if(!_interactable)
+        if(!_interactable || !_active)
             return;
 
         int rand = RNG.Range(0, 10);
