@@ -373,25 +373,25 @@ public class RAMScript : MonoBehaviour
         }
         else
             Debug.Log("TBomb = null");
-        maxShutdownTime = 30;
+        maxShutdownTime = 30f;
 
         if (nonIgnoredSolves * 5 < nonIgnoredCount * 1)
         { // Severely penalize the user if the non-ignored solves was less than 1/5 of all non-ignored by increaing the shutdown timer by 10% of the bomb's countdown timer.
-            Log("The shutdown button was pressed with {0} / {1} non-ignored solved. A shutdown penalty has been issued for this module at {2}. (Penalty: 20% of remaining time, adjusted by timer speed)", nonIgnoredSolves, nonIgnoredCount, bombInfo.GetFormattedTime());
-            maxShutdownTime += bombInfo.GetTime() / (timerSpeed <= 0 ? 1f : timerSpeed) / 5f;
+            Log("The shutdown button was pressed with {0} / {1} non-ignored solved. A shutdown penalty has been issued for this module at {2}. (Penalty: 20% of remaining time, adjusted by timer speed, min 90 seconds)", nonIgnoredSolves, nonIgnoredCount, bombInfo.GetFormattedTime());
+            maxShutdownTime = Mathf.Max(bombInfo.GetTime() / (timerSpeed <= 0 ? 1f : timerSpeed) / 5f, 90f);
         }
         else  if (nonIgnoredSolves * 5 < nonIgnoredCount * 2)
         { // Penalize the user if the non-ignored solves was less than 2/5 of all non-ignored by increaing the shutdown timer by 10% of the bomb's countdown timer.
-            Log("The shutdown button was pressed with {0} / {1} non-ignored solved. A shutdown penalty has been issued for this module at {2}. (Penalty: 10% of remaining time, adjusted by timer speed)", nonIgnoredSolves, nonIgnoredCount, bombInfo.GetFormattedTime());
-            maxShutdownTime += bombInfo.GetTime() / (timerSpeed <= 0 ? 1f : timerSpeed) / 10f;
+            Log("The shutdown button was pressed with {0} / {1} non-ignored solved. A shutdown penalty has been issued for this module at {2}. (Penalty: 10% of remaining time, adjusted by timer speed, min 45 seconds)", nonIgnoredSolves, nonIgnoredCount, bombInfo.GetFormattedTime());
+            maxShutdownTime = Mathf.Max(bombInfo.GetTime() / (timerSpeed <= 0 ? 1f : timerSpeed) / 10f, 45f);
         }
         else if (nonIgnoredSolves >= nonIgnoredCount)
         {
-            maxShutdownTime -= 22f;
-            Log("The shutdown button was pressed with no unsolved non-ignored modules. The shutdown time will be greatly reduced in the process.");
+            maxShutdownTime = 8f;
+            Log("The shutdown button was pressed with no unsolved non-ignored modules. The shutdown time will last for 8 seconds.");
         }
         else
-            Log("The shutdown button was pressed with {0} / {1} non-ignored solved. The shutdown will proceed as normal.", nonIgnoredSolves, nonIgnoredCount);
+            Log("The shutdown button was pressed with {0} / {1} non-ignored solved. The shutdown will last for 30 seconds.", nonIgnoredSolves, nonIgnoredCount);
         Log("Shutdown initiated for {0} seconds until disarm.", maxShutdownTime.ToString("0.00"));
         timeRemaining = 0f;
         GetComponent<KMAudio>().PlaySoundAtTransform("4beeps", transform);
@@ -420,20 +420,24 @@ public class RAMScript : MonoBehaviour
 
     private IEnumerator Strike()
     {
-        Log("Too much RAM is being used up! A strike will incur for failing to account for this if the memory is not cleared.");
+        if (memoryshadowMode != ModeShadow.OldMemShadow)
+            Log("Too much RAM is being used up! A strike will incur for failing to account for this if the memory is not cleared.");
+        else
+            Log("Too much RAM is being used up! A strike will incur for failing to account for this, even if the memory is cleared.");
         _interactable = false;
 
         GetComponent<KMAudio>().PlaySoundAtTransform("4beeps", transform);
 
         yield return new WaitForSeconds(8f);
-        if ((_bytes > _max && memoryshadowMode == ModeShadow.ReimaginedShadow) || memoryshadowMode == ModeShadow.OldMemShadow)
+        if (_bytes > _max || memoryshadowMode == ModeShadow.OldMemShadow)
         {
             GetComponent<KMBombModule>().HandleStrike();
             _bytes = 0;
             _interactable = !_isSolved;
             UpdateBar();
-            if (_shuttingDown)
+            if (_shuttingDown || (_isSolved && memoryshadowMode == ModeShadow.OldMemShadow))
             {
+                _active = false;
                 Log("Overflowing the RAM was not a good idea after all. Expecially when a shutdown has been initiated.");
                 timeRemaining = 0f;
             }
@@ -442,7 +446,7 @@ public class RAMScript : MonoBehaviour
 
     private void LogDebug(string msg, params object[] args)
     {
-        Debug.LogFormat("[Memory's Shadow #{0}] {1}", _id , string.Format(msg, args));
+        Debug.LogFormat("<Memory's Shadow #{0}> {1}", _id , string.Format(msg, args));
     }
     
     private void Log(string msg, params object[] args)

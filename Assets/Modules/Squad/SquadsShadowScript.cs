@@ -126,6 +126,7 @@ public class SquadsShadowScript : MonoBehaviour
             allSLs.Add(sl);
             if(sl && !_SLToMod.ContainsKey(sl))
                 _SLToMod.Add(sl, m.Obj);
+            DebugLog("{0}", m.Obj.name);
         }
 
         n = allSLs.Count(m => m == null);

@@ -2365,7 +2365,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 34d9545d7a2c0094ca635c8d1d712193, type: 2}
   - {fileID: 2100000, guid: c7c3a4035a3fc4b488488568084ccb43, type: 2}
   colorblindPatterns:
-  - {fileID: 0}
+  - {fileID: 2800000, guid: 9907dbb35167f2e409644350f2d8400c, type: 3}
   - {fileID: 2800000, guid: e91668c489f65624793229ea25d9bcef, type: 3}
   - {fileID: 2800000, guid: 9d99c7bbbf90ef042b742d1e372a6925, type: 3}
   - {fileID: 2800000, guid: b955095a01cd69b48b279eab878d0224, type: 3}
