@@ -88,6 +88,7 @@ GameObject:
   - component: {fileID: 23416495056699734}
   - component: {fileID: 114949751750813728}
   - component: {fileID: 114231645419787298}
+  - component: {fileID: 64037252123955322}
   m_Layer: 0
   m_Name: ButtonBL
   m_TagString: Untagged
@@ -309,6 +310,7 @@ GameObject:
   - component: {fileID: 23358624111605626}
   - component: {fileID: 114475362243185232}
   - component: {fileID: 114598480939946040}
+  - component: {fileID: 64895405998160958}
   m_Layer: 0
   m_Name: ButtonTR
   m_TagString: Untagged
@@ -328,6 +330,7 @@ GameObject:
   - component: {fileID: 23292895241928416}
   - component: {fileID: 114091959440801304}
   - component: {fileID: 114544865499429380}
+  - component: {fileID: 64794294662785808}
   m_Layer: 0
   m_Name: ButtonBR
   m_TagString: Untagged
@@ -479,6 +482,7 @@ GameObject:
   - component: {fileID: 23972526958508990}
   - component: {fileID: 114039127764235192}
   - component: {fileID: 114406745972426688}
+  - component: {fileID: 64530453760920024}
   m_Layer: 0
   m_Name: ButtonTL
   m_TagString: Untagged
@@ -516,6 +520,7 @@ GameObject:
   - component: {fileID: 114687845961435338}
   - component: {fileID: 114889690929301990}
   - component: {fileID: 114934259667437930}
+  - component: {fileID: 114366284707222918}
   m_Layer: 0
   m_Name: BrownButtonModule
   m_TagString: Untagged
@@ -569,6 +574,7 @@ GameObject:
   - component: {fileID: 23732031617263184}
   - component: {fileID: 114600435380827344}
   - component: {fileID: 114187629188885624}
+  - component: {fileID: 64446156040692380}
   m_Layer: 0
   m_Name: ButtonR
   m_TagString: Untagged
@@ -588,6 +594,7 @@ GameObject:
   - component: {fileID: 23604829162100794}
   - component: {fileID: 114162930312944220}
   - component: {fileID: 114276281365977064}
+  - component: {fileID: 64547838247225966}
   m_Layer: 0
   m_Name: ButtonL
   m_TagString: Untagged
@@ -1702,6 +1709,90 @@ MeshFilter:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1880903293276080}
   m_Mesh: {fileID: 4300000, guid: 4294b7eec712510488d4053cc149c9a1, type: 3}
+--- !u!64 &64037252123955322
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1049063202712432}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 1
+  m_CookingOptions: 14
+  m_SkinWidth: 0.01
+  m_Mesh: {fileID: 4300000, guid: 4294b7eec712510488d4053cc149c9a1, type: 3}
+--- !u!64 &64446156040692380
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1945164911059588}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 1
+  m_CookingOptions: 14
+  m_SkinWidth: 0.01
+  m_Mesh: {fileID: 4300000, guid: 4294b7eec712510488d4053cc149c9a1, type: 3}
+--- !u!64 &64530453760920024
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1829989752239464}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 1
+  m_CookingOptions: 14
+  m_SkinWidth: 0.01
+  m_Mesh: {fileID: 4300000, guid: 4294b7eec712510488d4053cc149c9a1, type: 3}
+--- !u!64 &64547838247225966
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1993028286020632}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 1
+  m_CookingOptions: 14
+  m_SkinWidth: 0.01
+  m_Mesh: {fileID: 4300000, guid: 4294b7eec712510488d4053cc149c9a1, type: 3}
+--- !u!64 &64794294662785808
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1514523423823664}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 1
+  m_CookingOptions: 14
+  m_SkinWidth: 0.01
+  m_Mesh: {fileID: 4300000, guid: 4294b7eec712510488d4053cc149c9a1, type: 3}
+--- !u!64 &64895405998160958
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1503267414450860}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 1
+  m_CookingOptions: 14
+  m_SkinWidth: 0.01
+  m_Mesh: {fileID: 4300000, guid: 4294b7eec712510488d4053cc149c9a1, type: 3}
 --- !u!108 &108113358928629014
 Light:
   m_ObjectHideFlags: 1
@@ -1754,7 +1845,8 @@ MonoBehaviour:
   IsPassThrough: 0
   ChildRowLength: 0
   Highlight: {fileID: 114201591416799716}
-  SelectableColliders: []
+  SelectableColliders:
+  - {fileID: 64530453760920024}
   DefaultSelectableIndex: 0
   AllowSelectionWrapX: 0
   AllowSelectionWrapY: 0
@@ -1789,7 +1881,8 @@ MonoBehaviour:
   IsPassThrough: 0
   ChildRowLength: 0
   Highlight: {fileID: 114549096974878302}
-  SelectableColliders: []
+  SelectableColliders:
+  - {fileID: 64794294662785808}
   DefaultSelectableIndex: 0
   AllowSelectionWrapX: 0
   AllowSelectionWrapY: 0
@@ -1848,7 +1941,8 @@ MonoBehaviour:
   IsPassThrough: 0
   ChildRowLength: 0
   Highlight: {fileID: 114994570262908758}
-  SelectableColliders: []
+  SelectableColliders:
+  - {fileID: 64547838247225966}
   DefaultSelectableIndex: 0
   AllowSelectionWrapX: 0
   AllowSelectionWrapY: 0
@@ -1989,6 +2083,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - KT/Mobile/DiffuseTint
+--- !u!114 &114366284707222918
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1843119762945718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1cfb889a07d5fd4e9baed7960bb397f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _colorblindMode: 0
 --- !u!114 &114387784524328848
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2066,7 +2172,8 @@ MonoBehaviour:
   IsPassThrough: 0
   ChildRowLength: 0
   Highlight: {fileID: 114547818601482126}
-  SelectableColliders: []
+  SelectableColliders:
+  - {fileID: 64895405998160958}
   DefaultSelectableIndex: 0
   AllowSelectionWrapX: 0
   AllowSelectionWrapY: 0
@@ -2140,7 +2247,8 @@ MonoBehaviour:
   IsPassThrough: 0
   ChildRowLength: 0
   Highlight: {fileID: 114240209058723434}
-  SelectableColliders: []
+  SelectableColliders:
+  - {fileID: 64446156040692380}
   DefaultSelectableIndex: 0
   AllowSelectionWrapX: 0
   AllowSelectionWrapY: 0
@@ -2220,6 +2328,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Module: {fileID: 114397928626278306}
+  ColorblindMode: {fileID: 114366284707222918}
   BombInfo: {fileID: 114687845961435338}
   Audio: {fileID: 114889690929301990}
   BrownButtonSelectable: {fileID: 114412791502448876}
@@ -2255,6 +2364,15 @@ MonoBehaviour:
   - {fileID: 2100000, guid: b71923cfd418b034ea9337591081e172, type: 2}
   - {fileID: 2100000, guid: 34d9545d7a2c0094ca635c8d1d712193, type: 2}
   - {fileID: 2100000, guid: c7c3a4035a3fc4b488488568084ccb43, type: 2}
+  colorblindPatterns:
+  - {fileID: 0}
+  - {fileID: 2800000, guid: e91668c489f65624793229ea25d9bcef, type: 3}
+  - {fileID: 2800000, guid: 9d99c7bbbf90ef042b742d1e372a6925, type: 3}
+  - {fileID: 2800000, guid: b955095a01cd69b48b279eab878d0224, type: 3}
+  - {fileID: 2800000, guid: 75faa2cf0948bda47897694dceed3639, type: 3}
+  - {fileID: 0}
+  - {fileID: 2800000, guid: a4d35b7022d5ba740a4641bbea10ab02, type: 3}
+  - {fileID: 2800000, guid: 2dc5b30785a2a534fb553930f968c5f3, type: 3}
   OtherButtons:
   - {fileID: 114039127764235192}
   - {fileID: 114162930312944220}
@@ -2291,7 +2409,8 @@ MonoBehaviour:
   IsPassThrough: 0
   ChildRowLength: 0
   Highlight: {fileID: 114060681569211938}
-  SelectableColliders: []
+  SelectableColliders:
+  - {fileID: 64037252123955322}
   DefaultSelectableIndex: 0
   AllowSelectionWrapX: 0
   AllowSelectionWrapY: 0

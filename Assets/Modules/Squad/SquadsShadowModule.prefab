@@ -864,7 +864,7 @@ TextMesh:
   m_Text: 0
   m_OffsetZ: 0
   m_CharacterSize: 0.001
-  m_LineSpacing: 1
+  m_LineSpacing: 0.5
   m_Anchor: 4
   m_Alignment: 0
   m_TabSize: 4
@@ -885,7 +885,7 @@ TextMesh:
   m_Text: 0
   m_OffsetZ: 0
   m_CharacterSize: 0.001
-  m_LineSpacing: 1
+  m_LineSpacing: 0.5
   m_Anchor: 4
   m_Alignment: 0
   m_TabSize: 4
@@ -1091,6 +1091,7 @@ MonoBehaviour:
   - {fileID: 114962974045209182}
   - {fileID: 114884368043379622}
   - {fileID: 114007660621943788}
+  bombInfo: {fileID: 114544835880799862}
   _digits:
   - {fileID: 102402813381278452}
   - {fileID: 102033199066002834}

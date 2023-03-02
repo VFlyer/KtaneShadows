@@ -14,6 +14,8 @@ public class SquadsShadowScript : MonoBehaviour
     [SerializeField]
     private KMSelectable[] _buttons;
     [SerializeField]
+    private KMBombInfo bombInfo;
+    [SerializeField]
     private TextMesh[] _digits;
 
     private readonly int _id = ++_idc;
@@ -27,32 +29,44 @@ public class SquadsShadowScript : MonoBehaviour
     private static Type _bcType;
     private static MethodInfo _getDisplayName;
 
-    private int _chains;
+    private int _chains, nonIgnoredCount;
     private bool _isSolved, _first;
     private int _submission;
     private float _lastPress;
-    private bool _running;
+    private bool _running, firstStrikeFinal;
     private static readonly Dictionary<string, int> _serials = new Dictionary<string, int>();
     private static readonly Dictionary<string, int> _serialSubs = new Dictionary<string, int>();
     private string _sn;
+    IEnumerable<string> ignoreList;
 
     private void Start()
     {
-#if UNITY_EDITOR
-        Log("Looks like you're in the editor. This module won't work here.");
-        _sn = "";
-        GetComponent<KMBombModule>().OnActivate += Activate;
-        _submission = 69;
-        _chains = 47;
-        Press(-1);
-        return;
-#endif
-        _sn = GetComponent<KMBombInfo>().GetSerialNumber();
+        if (Application.isEditor)
+        {
+            Log("The module is being ran in TestHarness. The correct answer to submit is 47.");
+            _sn = "";
+            GetComponent<KMBombModule>().OnActivate += Activate;
+            _submission = 69;
+            _chains = 47;
+            nonIgnoredCount = bombInfo.GetSolvableModuleNames().Count - 1;
+            ignoreList = new[] { "Squad's Shadow" };
+            Press(-1);
+            return;
+        }
+        _sn = bombInfo.GetSerialNumber();
         if(_serials.ContainsKey(_sn))
         {
             _chains = _serials[_sn];
             _submission = _serialSubs[_sn];
-            Log("There are multiple Squad's Shadows on this bomb, so all of their solutions are identical.");
+            Log("There is another Squad's Shadows on this bomb that has already calculated the amount of chains, so the solution for this module is identical.");
+            if (_chains == 0)
+                Log("There are 0 chains.");
+            else if (_chains == 1)
+                Log("There is only 1 chain.");
+            else
+                Log("There are {0} total chains.", _chains);
+            if (_chains >= 100)
+                Log("Since this number doesn't fit on the display, input it as {0} instead.", _chains % 100);
             Warn(false);
             GetComponent<KMBombModule>().OnActivate += Activate;
             Press(-1);
@@ -65,7 +79,7 @@ public class SquadsShadowScript : MonoBehaviour
         Warn(false);
         GetComponent<KMBombModule>().OnActivate += Activate;
 
-        string[] ignored = GetComponent<KMBossModule>().GetIgnoredModules("Squad's Shadow", new string[] { "Squad's Shadow" });
+        ignoreList = GetComponent<KMBossModule>().GetIgnoredModules("Squad's Shadow", new string[] { "Squad's Shadow" });
 
         List<Module> allModules = new List<Module>();
         Type needyType = ReflectionHelper.FindTypeInGame("NeedyComponent");
@@ -78,7 +92,7 @@ public class SquadsShadowScript : MonoBehaviour
             KMBombModule m;
             if(m = o.GetComponent<KMBombModule>())
             {
-                allModules.Add(new Module(o, ignored.Contains(m.ModuleDisplayName)));
+                allModules.Add(new Module(o, ignoreList.Contains(m.ModuleDisplayName)));
             }
             else
             {
@@ -91,6 +105,7 @@ public class SquadsShadowScript : MonoBehaviour
         Module[] warnMods = allModules.Where(m => m.Ignored).ToArray();
         allModules.RemoveAll(m => m.Ignored);
         DebugLog("{0} of them are not ignored.", allModules.Count);
+        nonIgnoredCount = allModules.Count;
         int n = allModules.Count(m => m == null);
         if(n != 0)
         {
@@ -192,7 +207,7 @@ public class SquadsShadowScript : MonoBehaviour
         else
             _twitchMode = false;
 
-        if(_first && GetComponent<KMBombInfo>().GetSolvableModuleNames().Contains("Mystery Module"))
+        if(_first && bombInfo.GetSolvableModuleNames().Contains("Mystery Module"))
             Mystery();
     }
 
@@ -307,11 +322,61 @@ public class SquadsShadowScript : MonoBehaviour
             GetComponent<KMBombModule>().HandlePass();
             GetComponent<KMAudio>().PlaySoundAtTransform("Success", transform);
             Warn(false);
+            for (float t = 0; t < 1f; t += Time.deltaTime)
+            {
+                var curEase = Easing.InOutSine(t, 0f, 1f, 1f);
+                for (var x = 0; x < _digits.Length; x++)
+                    _digits[x].color = Color.green * curEase + Color.white * (1f - curEase);
+                yield return null;
+            }
+            for (var x = 0; x < _digits.Length; x++)
+                _digits[x].color = Color.green;
         }
         else
         {
             Log("You submitted {0}, which is incorrect. Strike!", _submission);
+            
             GetComponent<KMBombModule>().HandleStrike();
+            var nonIgnoredSolves = bombInfo.GetSolvedModuleNames().Count(a => !ignoreList.Contains(a));
+            DebugLog("Checked on {0} / {1} non-ignored solves.", nonIgnoredSolves, nonIgnoredCount);
+            if (nonIgnoredSolves + 1 >= nonIgnoredCount)
+            {
+                switch (firstStrikeFinal)
+                {
+                    case false:
+                        firstStrikeFinal = true;
+                        if (_submission < _chains % 100)
+                        {
+                            Log("The correct value is actually higher than the amount specified.");
+                            for (var x = 0; x < _digits.Length; x++)
+                                _digits[x].text = "^\n" + _digits[x].text + "\n";
+                        }
+                        else
+                        {
+                            Log("The correct value is actually lower than the amount specified.");
+                            for (var x = 0; x < _digits.Length; x++)
+                                _digits[x].text = "\n" + _digits[x].text + "\nv";
+                        }
+                        break;
+                    default:
+                        for (var x = 0; x < _digits.Length; x++)
+                        {
+                            var filteredSub = _submission / (x == 0 ? 10 : 1) % 10;
+                            var filteredExpected = _chains / (x == 0 ? 10 : 1) % 10;
+                            _digits[x].text = string.Format("{2}\n{0}\n{1}", _digits[x].text, filteredSub > filteredExpected ? "v" : "", filteredSub < filteredExpected ? "^" : "");
+                        }
+                        break;
+                }
+            }
+            for (float t = 0; t < 1f; t += Time.deltaTime)
+            {
+                var curEase = Easing.InOutSine(2 * t, 0f, 2f, 1f);
+                for (var x = 0; x < _digits.Length; x++)
+                    _digits[x].color = Color.red * curEase + Color.white * (1f - curEase);
+                yield return null;
+            }
+            for (var x = 0; x < _digits.Length; x++)
+                _digits[x].color = Color.white;
         }
         _running = false;
     }
@@ -412,7 +477,7 @@ public class SquadsShadowScript : MonoBehaviour
     private static IDictionary<string, object> _tpAPI;
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Use ""!{0} submit 47"" to submit 47 chains.";
+    private readonly string TwitchHelpMessage = @"Use ""!{0} submit 47"" to submit the value of 47.";
 #pragma warning restore 414
     IEnumerator ProcessTwitchCommand(string command)
     {
@@ -455,7 +520,7 @@ public class SquadsShadowScript : MonoBehaviour
 
     IEnumerator TwitchHandleForcedSolve()
     {
-        Log("Module force solved.");
+        Log("Issuing force solve via TP Handler.");
         IEnumerator cmd = ProcessTwitchCommand("submit " + _chains % 100);
         while(cmd.MoveNext())
             yield return cmd.Current;

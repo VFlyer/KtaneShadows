@@ -1944,7 +1944,7 @@ TextMesh:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1341967125615168}
-  m_Text: Solve Module
+  m_Text: Shutdown
   m_OffsetZ: 0
   m_CharacterSize: 1
   m_LineSpacing: 1
@@ -1986,7 +1986,7 @@ TextMesh:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1089321206921738}
-  m_Text: Clear memory
+  m_Text: Clear Memory
   m_OffsetZ: 0
   m_CharacterSize: 1
   m_LineSpacing: 1
@@ -2377,8 +2377,17 @@ MonoBehaviour:
   _percentText: {fileID: 102739105448986180}
   _dateText: {fileID: 102125702264354320}
   _timeText: {fileID: 102561767244255364}
+  _greenBarText: {fileID: 102122514870334706}
+  _warningText: {fileID: 102139597870807118}
+  _RAMManageText: {fileID: 102682469885800312}
+  _ShutdownText: {fileID: 102809528376566148}
+  _ClearMemoryText: {fileID: 102913583049899870}
   _greenBar: {fileID: 4058090343389362}
   _grayBar: {fileID: 4640161389571054}
+  bombInfo: {fileID: 114803422847570414}
+  groupedRAM: {fileID: 1400916487439006}
+  clearBtn: {fileID: 114240530732898330}
+  shutdownButton: {fileID: 114160589043251318}
 --- !u!114 &114740229731480734
 MonoBehaviour:
   m_ObjectHideFlags: 1

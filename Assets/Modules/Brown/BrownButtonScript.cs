@@ -10,6 +10,7 @@ using Rnd = UnityEngine.Random;
 public class BrownButtonScript : MonoBehaviour
 {
     public KMBombModule Module;
+    public KMColorblindMode ColorblindMode;
     public KMBombInfo BombInfo;
     public KMAudio Audio;
     public KMSelectable BrownButtonSelectable;
@@ -20,25 +21,34 @@ public class BrownButtonScript : MonoBehaviour
     public GameObject WallTemplate;
     public GameObject Camera;
     public Material[] Materials;
+    public Texture[] colorblindPatterns;
 
     public KMSelectable[] OtherButtons;
 
     private static int _moduleIdCounter = 1;
     private int _moduleId;
     private bool _moduleSolved;
-    private bool _moduleActivated = false;
+    private bool _moduleActivated = false, colorblindDetected = false;
     List<Vector3Int> _chosenNet;
     private Vector3 _currentRotation;
     private Vector3Int _currentPosition;
     private Coroutine _moveRoutine = null;
     Dictionary<Vector3Int, Ax> _absoluteAxes;
-    private Ax _correctAxis;
+    private Ax _correctAxis, colorblindAxisColor;
     private Quaternion _trueRotation = Quaternion.identity;
-
-    private const int REPEATSCOUNT = 0;
+    List<GameObject> storedRelevantWalls;
 
     private void Start()
     {
+        try
+        {
+            colorblindDetected = ColorblindMode.ColorblindModeActive;
+        }
+        catch
+        {
+            colorblindDetected = false;
+        }
+
         _moduleId = _moduleIdCounter++;
         BrownButtonSelectable.OnInteract += BrownButtonPress;
         for(int i = 0; i < OtherButtons.Length; ++i)
@@ -62,12 +72,11 @@ public class BrownButtonScript : MonoBehaviour
             searchSpace.Add(new Or { Pos = change, Axes = orig.RotateFromChange(change) });
 
         List<Ax> claimed = new List<Ax> { Ax.Down };
-        int repeatCount = 0;
 
         while(claimed.Count < 8)
         {
             IEnumerable<Or> allOrs = searchSpace.Where(o => o.Axes != null && !claimed.Contains(o.Axes[6]) && !_chosenNet.Contains(o.Pos));
-            if(allOrs.Count() == 0)
+            if(!allOrs.Any())
             {
                 Debug.LogFormat("<Brown's Shadow #{0}> Panicked!", _moduleId);
                 goto panic;
@@ -99,13 +108,10 @@ public class BrownButtonScript : MonoBehaviour
 
             foreach(Or or in searchSpace.Where(o => o.Pos == newOr.Pos))
                 or.Axes = null;
-
-            if(claimed.Count == 8 && repeatCount++ < REPEATSCOUNT)
-                claimed = new List<Ax>();
         }
-
+        storedRelevantWalls = new List<GameObject>();
         int ansAx = Rnd.Range(0, 4);
-        Debug.LogFormat("<Brown's Shadow #{0}> The solution axis is id {1}.", _moduleId, ansAx);
+        Debug.LogFormat("<Brown's Shadow #{0}> The solution axis is id {1}.", _moduleId, new[] { "Down/Up", "Left/Right", "Back/Front", "Zig/Zag" }[ansAx]);
 
         List<int> ixes = new List<int> { 1, 9, 17 }.Shuffle();
         ixes.Insert(ansAx, 0);
@@ -119,7 +125,7 @@ public class BrownButtonScript : MonoBehaviour
             new Ax[] { Ax.Zig, Ax.Zag }
         };
 
-        Debug.LogFormat("[Brown's Shadow #{0}] Chose net: {1}", _moduleId, _chosenNet.Select(v => v.ToString()).Join(", "));
+        Debug.LogFormat("[Brown's Shadow #{0}] Chosen net: {1}", _moduleId, _chosenNet.Select(v => v.ToString()).Join(", "));
         for(int ix = 0; ix < _chosenNet.Count; ix++)
             Debug.LogFormat("[Brown's Shadow #{0}] Cube {1} corresponds to {2}.", _moduleId, _chosenNet[ix], (int)_absoluteAxes[_chosenNet[ix]]);
 
@@ -128,14 +134,21 @@ public class BrownButtonScript : MonoBehaviour
             Ax[] tests = alltests[i];
             IEnumerable<Vector3Int> nodes = _chosenNet.Where(p => _absoluteAxes[p] == tests[0] || _absoluteAxes[p] == tests[1]);
             Vector3Int marked = nodes.PickRandom();
-            if(ansAx != i)
-                markedAxes.Add(_absoluteAxes[marked]);
+            var currentAxis = _absoluteAxes[marked];
+            var curOffset = ixes[i];
+            if (ansAx != i)
+                markedAxes.Add(currentAxis);
             Vector3Int markedWall = changes.Where(c => !_chosenNet.Contains(marked + c)).PickRandom();
 
-            AddWall(marked, markedWall, ansAx == i ? Materials[0] : Materials[ixes[i] + (int)_absoluteAxes[marked]]);
-            if(ansAx != i)
-                Debug.LogFormat("[Brown's Shadow #{0}] Cube {1} is displaying {2}.", _moduleId, marked, Materials[ixes[i] + (int)_absoluteAxes[marked]].name.Substring(7));
 
+            AddWall(marked, markedWall, ansAx == i ? Materials[0] : Materials[curOffset + (int)currentAxis], curOffset == 1);
+
+            if (ansAx != i)
+            {
+                Debug.LogFormat("[Brown's Shadow #{0}] Cube {1} is displaying {2}.", _moduleId, marked, Materials[ixes[i] + (int)currentAxis].name.Substring(7));
+                if (curOffset + (int)currentAxis >= 1 && curOffset + (int)currentAxis <= 8)
+                    colorblindAxisColor = currentAxis;
+            }
             foreach(Vector3Int change in changes.Where(c => !_chosenNet.Contains(marked + c) && c != markedWall))
                 AddWall(marked, change, Materials[0]);
 
@@ -143,7 +156,7 @@ public class BrownButtonScript : MonoBehaviour
                 foreach(Vector3Int change in changes.Where(c => !_chosenNet.Contains(pos + c)))
                     AddWall(pos, change, Materials[0]);
         }
-
+        HandleColorblindToggle();
         if(alltests.Select(a => a[0]).Count(a => markedAxes.Contains(a)) >= 2)
             _correctAxis = alltests[ansAx][0];
         else
@@ -153,6 +166,7 @@ public class BrownButtonScript : MonoBehaviour
 
         _currentPosition = _chosenNet.PickRandom();
         Vector3 end = new Vector3(-_currentPosition.x, _currentPosition.y, _currentPosition.z) * -0.1f - _currentRotation * 0.1f;
+        Debug.LogFormat("[Brown's Shadow #{0}] You are starting at {1}.", _moduleId, _currentPosition.ToString());
         WallsParent.localPosition = end;
         _currentRotation = Vector3Int.down;
 
@@ -162,7 +176,17 @@ public class BrownButtonScript : MonoBehaviour
             _moduleActivated = true;
         };
     }
-
+    void HandleColorblindToggle()
+    {
+        if (storedRelevantWalls.Any())
+        {
+            var renderer = storedRelevantWalls.First().GetComponentInChildren<CustomMaterialInfo>();
+            //Debug.Log(renderer != null);
+            //Debug.Log(storedRelevantWalls.First().name);
+            if (renderer != null)
+                renderer.Color.mainTexture = colorblindDetected ? colorblindPatterns[(int)colorblindAxisColor] : null;
+        }
+    }
     private void OtherPress(int j)
     {
         Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.ButtonPress, OtherButtons[j].transform);
@@ -256,7 +280,7 @@ public class BrownButtonScript : MonoBehaviour
         WallsParent.localPosition = end;
     }
 
-    private void AddWall(Vector3Int position, Vector3Int direction, Material m)
+    private void AddWall(Vector3Int position, Vector3Int direction, Material m, bool storeWall = false)
     {
         GameObject go = Instantiate(WallTemplate, WallsParent);
         go.transform.localPosition = new Vector3Int(-position.x, position.y, position.z);
@@ -264,6 +288,8 @@ public class BrownButtonScript : MonoBehaviour
         go.transform.localEulerAngles = rot;
         go.transform.localScale = new Vector3(1f, 1f, 1f);
         go.GetComponentInChildren<CustomMaterialInfo>().Color = m;
+        if (storeWall)
+            storedRelevantWalls.Add(go);
     }
 
     private Vector3 DirectionToEuler(Vector3Int direction)
@@ -301,7 +327,7 @@ public class BrownButtonScript : MonoBehaviour
             {
                 if(_absoluteAxes[_currentPosition] == _correctAxis)
                 {
-                    Debug.LogFormat("[Brown's Revenge #{0}] You submitted correctly. Good job!", _moduleId);
+                    Debug.LogFormat("[Brown's Revenge #{0}] You submitted at the correct position. Good job!", _moduleId);
                     Audio.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.CorrectChime, transform);
                     Module.HandlePass();
                     _moduleSolved = true;
@@ -309,7 +335,7 @@ public class BrownButtonScript : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogFormat("[Brown's Revenge #{0}] You tried to submit at {1}. That is incorrect. Strike!", _moduleId, _currentPosition);
+                    Debug.LogFormat("[Brown's Revenge #{0}] Strike! Incorrect position submitted: {1}.", _moduleId, _currentPosition);
                     Module.HandleStrike();
                 }
             }
@@ -348,39 +374,52 @@ public class BrownButtonScript : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private string TwitchHelpMessage = @"Use ""!{0} F"" to press the brown button. Use ""!{0} QWEASD"" to press every other button.";
+    private string TwitchHelpMessage = @"Use ""!{0} F"" to press the brown button to move forwards. Use ""!{0} QWEASD"" to press every other button to alter the camera on the module. Use ""!{0} colorblind"" to toggle colorblind mode for specific walls.";
 #pragma warning restore 414
 
     private IEnumerator ProcessTwitchCommand(string command)
     {
         command = Regex.Replace(command.ToLowerInvariant(), @"\s+", "");
-        if(command.Length == 0 || command.Any(c => !"fqweasd".Contains(c)))
+        if(command.Length == 0)
+            yield break;
+        if (command.RegexMatch(@"^colou?rblind$"))
+        {
+            yield return null;
+            colorblindDetected ^= true;
+            HandleColorblindToggle();
+            yield break;
+        }
+        else if (command.Any(c => !"fqweasd".Contains(c)))
             yield break;
         yield return null;
         foreach(char c in command)
         {
-            if(c == 'f')
-                BrownButtonSelectable.OnInteract();
-            else if(c == 'q')
-                OtherButtons[0].OnInteract();
-            else if(c == 'w')
-                OtherButtons[5].OnInteract();
-            else if(c == 'e')
-                OtherButtons[2].OnInteract();
-            else if(c == 'a')
-                OtherButtons[1].OnInteract();
-            else if(c == 's')
-                OtherButtons[3].OnInteract();
-            else if(c == 'd')
-                OtherButtons[4].OnInteract();
-
-            yield return new WaitForSeconds(0.1f);
-
-            if(c == 'f')
+            switch (c)
             {
-                BrownButtonSelectable.OnInteractEnded();
-                yield return new WaitForSeconds(0.1f);
+                case 'f':
+                    BrownButtonSelectable.OnInteract();
+                    BrownButtonSelectable.OnInteractEnded();
+                    break;
+                case 'q':
+                    OtherButtons[0].OnInteract();
+                    break;
+                case 'w':
+                    OtherButtons[5].OnInteract();
+                    break;
+                case 'e':
+                    OtherButtons[2].OnInteract();
+                    break;
+                case 'a':
+                    OtherButtons[1].OnInteract();
+                    break;
+                case 's':
+                    OtherButtons[3].OnInteract();
+                    break;
+                case 'd':
+                    OtherButtons[4].OnInteract();
+                    break;
             }
+            yield return new WaitForSeconds(0.1f);
         }
     }
 }
